@@ -16,9 +16,18 @@ const registerUser = async (req,res) => {
 }
 
 const loginUser = async (req, res) => {
-    const user = await authService.loginWithUserAndPassword(req.body.username, req.body.password);
-    const authTokens = await tokenService.generateAuthTokens(user._id);
-    res.send(authTokens);
+    try{
+        const user = await authService.loginWithUserAndPassword(req.body.username, req.body.password);
+        const authTokens = await tokenService.generateAuthTokens(user._id);
+        res.send(authTokens);
+    }
+    catch(err){
+        console.error(err);
+        if(err.statusCode===400){
+            return res.status(400).send("Incorrect username or password. Please try again.")
+        }
+        return res.status(500).send("Internal Server Error");
+    }
 }
 
 module.exports ={

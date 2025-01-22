@@ -20,7 +20,7 @@ const exitHandler = () =>{
     else process.exit(1);
 }
 
-const unexpectedErrorHandler = () =>{
+const unexpectedErrorHandler = (error) =>{
     console.log(error);
     exitHandler();
 }

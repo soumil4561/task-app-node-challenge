@@ -7,27 +7,21 @@ const getTasks = async (req, res) => {
         const tasks = await taskService.getAllUserTasks(req.user.id, page, limit);
         return res.status(200).send(tasks);
     }
-    catch (error) {
-        console.log(error);
-        res.status(500).send("Internal Server Error");
+    catch (err) {
+        console.log(err);
+        res.status(err.code).send(err.message);
     }
 
 }
 
 const getTaskById = async (req, res) => {
     try {
-        const task = await taskService.getTaskById(req.params.id);
-        if (!task) {
-            return res.status(400).send("No task with given id found");
-        }
-        if (task.creator.toString() !== req.user.id) {
-            return res.status(403).send("Unauthorized to access this resource.");
-        }
+        const task = await taskService.getTaskById(req.params.id, req.user.id);
         res.status(200).send(task);
     }
     catch (err) {
         console.log(err);
-        res.status(500).send("Internal Server Error");
+        res.status(err.code).send(err.message);
     }
 }
 
@@ -45,43 +39,23 @@ const createTask = async (req, res) => {
 
 const updateTask = async (req, res) => {
     try {
-        const task = await taskService.getTaskById(req.params.id);
-        if (!task) {
-            return res.status(400).send("No task with given id found");
-        }
-        if (task.creator.toString() !== req.user.id) {
-            return res.status(403).send("Unauthorized to access this resource.");
-        }
-        const updatedTask = await taskService.updateTask(req.params.id, req.body);
+        const updatedTask = await taskService.updateTask(req.params.id, req.body, req.user.id);
         res.status(200).send(updatedTask);
     }
     catch (err) {
         console.log(err)
-        if (err.code === 11000) {
-            return res.status(400).send('Duplicate ID Found');
-        }
-        else return res.status(500).send("Internal Server Error");
+        return res.status(err.code).send(err.message);
     }
 }
 
 const deleteTask = async (req, res) => {
     try {
-        const task = await taskService.getTaskById(req.params.id);
-        if (!task) {
-            return res.status(400).send("No task with given id found");
-        }
-        if (task.creator.toString() !== req.user.id) {
-            return res.status(403).send("Unauthorized to access this resource.");
-        }
-        await taskService.deleteTask(req.params.id);
+        await taskService.deleteTask(req.params.id, req.user.id);
         res.status(200).send("Deleted Task");
     }
     catch (err) {
-        console.log(err)
-        if (err.code === 11000) {
-            return res.status(400).send('Duplicate ID Found');
-        }
-        else return res.status(500).send("Internal Server Error");
+        console.log(err);
+        return res.status(err.code).send(err.message);
     }
 }
 
