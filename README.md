@@ -43,5 +43,5 @@ Start the server
 
 ## API Reference
 
-Check the API Documentation [here](https://documenter.getpostman.com/view/41320613/2sAYQdiprx#8ada7b43-444d-4e8c-b60c-394bd02a2c22)
+Check the API Documentation [here](https://documenter.getpostman.com/view/41320613/2sAYQdiprx)
 
