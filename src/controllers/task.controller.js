@@ -1,68 +1,83 @@
 const taskService = require("../services/task.service");
+const { sendSuccess, sendError } = require("../utils/response");
 
 const getTasks = async (req, res) => {
-    const page = parseInt(req.query.page, 10) || process.env.PAGINATION_DEFAULT_PAGE;
-    const limit = parseInt(req.query.limit, 10) || process.env.PAGINATION_DEFAULT_LIMIT;
-    try {
-        const tasks = await taskService.getAllUserTasks(req.user.id, page, limit);
-        return res.status(200).send(tasks);
-    }
-    catch (err) {
-        console.log(err);
-        res.status(err.code).send(err.message);
-    }
+  const page = parseInt(req.query.page, 10) || parseInt(process.env.PAGINATION_DEFAULT_PAGE, 10) || 1;
+  const limit = parseInt(req.query.limit, 10) || parseInt(process.env.PAGINATION_DEFAULT_LIMIT, 10) || 10;
 
-}
+  try {
+    const { tasks, totalTasks } = await taskService.getAllUserTasks(req.user.id, page, limit);
+    const totalPages = Math.ceil(totalTasks / limit);
+    return sendSuccess(
+      res,
+      {
+        tasks,
+        pagination: {
+          totalTasks,
+          totalPages,
+          currentPage: page,
+          limit
+        }
+      },
+      "Tasks retrieved successfully!",
+      200
+    );
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "SERVER_ERROR", "Error fetching tasks.", err.message, 500);
+  }
+};
 
 const getTaskById = async (req, res) => {
-    try {
-        const task = await taskService.getTaskById(req.params.id, req.user.id);
-        res.status(200).send(task);
-    }
-    catch (err) {
-        console.log(err);
-        res.status(err.code).send(err.message);
-    }
-}
+  try {
+    const task = await taskService.getTaskById(req.params.id, req.user.id);
+    return sendSuccess(res, task, "Task retrieved successfully!", 200);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "NOT_FOUND", "Task not found.", err.message, 404);
+  }
+};
 
 const createTask = async (req, res) => {
-    try {
-        const task = await taskService.addTask(req.body, req.user.id);
-        res.status(201).send(task);
-    }
-    catch (err) {
-        console.error(err);
-        res.status(500).send("Error Creating task at the moment. Please try later");
-    }
-
-}
+  try {
+    const task = await taskService.addTask(req.body, req.user.id);
+    return sendSuccess(res, task, "Task created successfully!", 201);
+  } catch (err) {
+    console.error(err);
+    return sendError(res, "SERVER_ERROR", "Error creating task. Please try later.", err.message, 500);
+  }
+};
 
 const updateTask = async (req, res) => {
-    try {
-        const updatedTask = await taskService.updateTask(req.params.id, req.body, req.user.id);
-        res.status(200).send(updatedTask);
+  try {
+    const updatedTask = await taskService.updateTask(req.params.id, req.body, req.user.id);
+    return sendSuccess(res, updatedTask, "Task updated successfully!", 200);
+  } catch (err) {
+    console.error(err);
+    if (err.code === 404) {
+      return sendError(res, "NOT_FOUND", "Task not found.", err.message, 404);
     }
-    catch (err) {
-        console.log(err)
-        return res.status(err.code).send(err.message);
-    }
-}
+    return sendError(res, "SERVER_ERROR", "Error updating task.", err.message, 500);
+  }
+};
 
 const deleteTask = async (req, res) => {
-    try {
-        await taskService.deleteTask(req.params.id, req.user.id);
-        res.status(200).send("Deleted Task");
+  try {
+    await taskService.deleteTask(req.params.id, req.user.id);
+    return sendSuccess(res, null, "Task deleted successfully!", 200);
+  } catch (err) {
+    console.error(err);
+    if (err.code === 404) {
+      return sendError(res, "NOT_FOUND", "Task not found.", err.message, 404);
     }
-    catch (err) {
-        console.log(err);
-        return res.status(err.code).send(err.message);
-    }
-}
+    return sendError(res, "SERVER_ERROR", "Error deleting task.", err.message, 500);
+  }
+};
 
 module.exports = {
-    getTasks,
-    createTask,
-    getTaskById,
-    updateTask,
-    deleteTask
-}
+  getTasks,
+  createTask,
+  getTaskById,
+  updateTask,
+  deleteTask
+};

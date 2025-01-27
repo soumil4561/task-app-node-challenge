@@ -18,4 +18,8 @@ app.use(cors());
 
 app.use("/api",routes);
 
+app.use((req, res) => {
+    return sendError(res, "NOT_FOUND", "Route not found.", null, 404);
+});
+
 module.exports = app;

@@ -1,24 +1,20 @@
 const passport = require('passport');
+const { sendError } = require('../utils/response');
 
 const auth = (req, res, next) => {
-    let responseObj = {
-        statusCode: 0,
-        errorMsg: "",
-        data: {}
+  passport.authenticate('jwt', (err, user, info) => {
+    if (err) {
+      console.error(err);
+      return sendError(res, "AUTH_ERROR", "An error occurred during authentication.", err.message, 500);
     }
-    passport.authenticate('jwt', (err, user, info) => {
-        if (err) {
-            return next(err);
-        }
-        if (!user) {
-            responseObj.data = info.message
-            responseObj.statusCode = 401
-            responseObj.errorMsg = "User not Authenticated."
-            return res.status(responseObj.statusCode).json(responseObj)
-        }
-        req.user = user;
-        next();
-    })(req, res, next);
-}
+
+    if (!user) {
+      return sendError(res, "UNAUTHORIZED", "User not authenticated.", info?.message || "Authentication failed.", 401);
+    }
+
+    req.user = user; 
+    next();
+  })(req, res, next);
+};
 
 module.exports = auth;

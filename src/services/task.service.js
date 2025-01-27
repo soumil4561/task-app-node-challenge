@@ -7,11 +7,17 @@ const addTask = async(taskBody, userId)=>{
     return task;
 }
 
-const getAllUserTasks = async(userId, page, limit) => {
-    const skip = (page-1)*limit;
-    const tasks = await Task.find({creator:userId}).skip(skip).limit(limit);
-    return tasks;
-}
+const getAllUserTasks = async (userId, page, limit) => {
+    const tasks = await Task.find({ creator: userId })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+    
+    const totalTasks = await Task.countDocuments({ creator: userId });
+
+    return { tasks, totalTasks };
+};
+
 
 const getTaskById = async(taskId, userId) => {
     const task = await Task.findById(taskId);

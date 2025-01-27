@@ -1,7 +1,6 @@
 const Joi = require('joi');
-const httpStatus = require('http-status');
+const { sendError } = require('../utils/response');
 const pick = require('../utils/pick');
-const ApiError = require('../utils/ApiError');
 
 const validate = (schema) => (req, res, next) => {
   const validSchema = pick(schema, ['params', 'query', 'body']);
@@ -12,9 +11,16 @@ const validate = (schema) => (req, res, next) => {
 
   if (error) {
     const errorMessage = error.details.map((details) => details.message).join(', ');
-    return next(new ApiError(400, errorMessage));
+    return sendError(
+      res,
+      "VALIDATION_ERROR",
+      "Request validation failed.",
+      errorMessage,
+      400
+    );
   }
-  Object.assign(req, value);
+
+  Object.assign(req, value); // Add validated values to the request object
   return next();
 };
 
