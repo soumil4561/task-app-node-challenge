@@ -26,4 +26,5 @@ const generateAuthTokens = async (userId) => {
 
 module.exports = {
     generateAuthTokens,
+    generateToken
 }
