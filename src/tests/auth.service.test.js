@@ -1,72 +1,59 @@
-const authService = require('../services/auth.service');
-const { User } = require('../models');
-const ApiError = require('../utils/ApiError');
+const { User } = require("../models");
+const { loginWithUserAndPassword } = require("../services/auth.service");
+const ApiError = require("../utils/ApiError");
 
-// Mock the User model methods
-jest.mock('../models', () => ({
+jest.mock("../models", () => ({
   User: {
     findOne: jest.fn(),
   },
 }));
 
-describe('authService: loginWithUserAndPassword', () => {
+describe("Auth Service - loginWithUserAndPassword", () => {
+  let mockUser;
+
   beforeEach(() => {
+    mockUser = {
+      username: "testuser",
+      isPasswordMatch: jest.fn(),
+    };
+  });
+
+  afterEach(() => {
     jest.clearAllMocks();
   });
 
-  it('should login the user successfully if credentials are correct', async () => {
-    const username = 'validUser';
-    const password = 'validPassword123';
-    const user = { username, password, isPasswordMatch: jest.fn().mockResolvedValue(true) };
+  it("should return user when credentials are correct", async () => {
+    mockUser.isPasswordMatch.mockResolvedValue(true);
+    User.findOne.mockResolvedValue(mockUser);
 
-    // Mock findOne to return the user
-    User.findOne.mockResolvedValue(user);
+    const result = await loginWithUserAndPassword("testuser", "password123");
 
-    // Call the function
-    const result = await authService.loginWithUserAndPassword(username, password);
-
-    // Check that the result matches the user object
-    expect(result).toEqual(user);
-    expect(User.findOne).toHaveBeenCalledWith({ username });
-    expect(user.isPasswordMatch).toHaveBeenCalledWith(password);
+    expect(User.findOne).toHaveBeenCalledWith({ username: "testuser" });
+    expect(mockUser.isPasswordMatch).toHaveBeenCalledWith("password123");
+    expect(result).toEqual(mockUser);
   });
 
-  it('should throw an error if user is not found', async () => {
-    const username = 'nonExistentUser';
-    const password = 'anyPassword123';
+  it("should throw an error when user is not found", async () => {
+    User.findOne.mockResolvedValue(null);
 
-    // Mock findOne to return null (user not found)
-    User.findOne.mockResdolvedValue(null);
+    await expect(loginWithUserAndPassword("invaliduser", "password123"))
+      .rejects.toThrow(ApiError);
+    await expect(loginWithUserAndPassword("invaliduser", "password123"))
+      .rejects.toThrow("Incorrect Credentials");
 
-    try {
-      await authService.loginWithUserAndPassword(username, password);
-    } catch (err) {
-      // Debugging log here will help us understand if this is hit
-      console.log("Error thrown:", err); // Check the error in the console output
-
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(400);
-      expect(err.message).toBe('Incorrect Credentials');
-    }
+    expect(User.findOne).toHaveBeenCalledWith({ username: "invaliduser" });
   });
 
-  it('should throw an error if password does not match', async () => {
-    const username = 'validUser';
-    const password = 'wrongPassword123';
-    const user = { username, password, isPasswordMatch: jest.fn().mockResolvedValue(false) };
+  it("should throw an error when password is incorrect", async () => {
+    mockUser.isPasswordMatch.mockResolvedValue(false);
+    User.findOne.mockResolvedValue(mockUser);
 
-    // Mock findOne to return the user
-    User.findOne.mockResolvedValue(user);
+    await expect(loginWithUserAndPassword("testuser", "wrongpassword"))
+      .rejects.toThrow(ApiError);
+    await expect(loginWithUserAndPassword("testuser", "wrongpassword"))
+      .rejects.toThrow("Incorrect Credentials");
 
-    try {
-      await authService.loginWithUserAndPassword(username, password);
-    } catch (err) {
-      // Debugging log here will help us understand if this is hit
-      console.log("Error thrown:", err); // Check the error in the console output
-
-      expect(err).toBeInstanceOf(ApiError);
-      expect(err.statusCode).toBe(400);
-      expect(err.message).toBe('Incorrect Credentials');
-    }
+    expect(User.findOne).toHaveBeenCalledWith({ username: "testuser" });
+    expect(mockUser.isPasswordMatch).toHaveBeenCalledWith("wrongpassword");
   });
 });
