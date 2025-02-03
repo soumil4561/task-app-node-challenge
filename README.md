@@ -25,7 +25,7 @@ To run this project, you will need to add the following environment variables to
 Go to the project directory
 
 ```bash
-  cd project-name
+  cd task-app-node-challenge
 ```
 
 Install dependencies
@@ -37,9 +37,23 @@ Install dependencies
 Start the server
 
 ```bash
-  nodemon index.js
+  npm start
 ```
 
+## Running dev mode
+To run the dev mode, run the following command,
+
+```bash
+npm run dev
+```
+
+## Running Tests
+
+To run tests, run the following command
+
+```bash
+  npm run test
+```
 
 ## API Reference
 
